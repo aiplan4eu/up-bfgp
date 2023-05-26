@@ -13,6 +13,7 @@ import pkg_resources
 import unified_planning.engines as engines
 from unified_planning.io.pddl_writer import PDDLWriter
 import tempfile
+from unified_planning.engines.pddl_planner import PDDLPlanner
 
 
 class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerMixin):
@@ -71,7 +72,6 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
         assert problem_filenames
         for idx, problem_filename in enumerate(problem_filenames):
             cmd = f"python {translator} -d {domain_filename} -i {problem_filename} -o {dest_dir} -id {idx + 1}"
-            print(cmd)
             subprocess.run(cmd.split())
         return dest_dir
 
@@ -93,66 +93,50 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
         assert problems
         for problem in problems:
             assert isinstance(problem, up.model.Problem)
-        plan = None
-        logs: List["up.engines.results.LogMessage"] = []
+        # logs: List["up.engines.results.LogMessage"] = []
         with tempfile.TemporaryDirectory() as tempdir:
             domain_filename = os.path.join(tempdir, "domain.pddl")
             problem_filenames = [f"{tempdir}/{idx}.pddl" for idx in range(1, 1 + len(problems))]
             plan_filename = os.path.join(tempdir, "generalized_plan.prog")
+            self.pddl_writers = []
             for idx, problem_filename in enumerate(problem_filenames):
-                pddl_writer = PDDLWriter(problems[idx])
-                if idx == 0:  # write the domain only once
-                    pddl_writer.write_domain(domain_filename)
-                pddl_writer.write_problem(problem_filename)
+                self.pddl_writers.append(PDDLWriter(problems[idx]))
+                self.pddl_writers[-1].write_domain(domain_filename)
+                self.pddl_writers[-1].write_problem(problem_filename)
             cmd = self.get_cmd(domain_filename, problem_filenames, plan_filename)
 
             # Step 2. run command (search a GP plan)
             subprocess.run(cmd)
 
-            # Step 3. generate plans and validate results
+            # Step 3. generate plans
+            main_bin = pkg_resources.resource_filename(__name__, "bfgp_pp/main.bin")
+            cmd = f"{main_bin} -m validation-prog -t {self._theory} -f tmp/ -p {plan_filename}".split()
+            subprocess.run(cmd)
+            subprocess.run('mv plan.* tmp/', shell=True)
 
-            # Step 4. return a list of results
-        return [PlanGenerationResultStatus.SOLVED_SATISFICING]
-
-    # def _plan_from_file(
-    #    self,
-    #    problem: "up.model.Problem",
-    #    plan_filename: str,
-    #    get_item_named: Callable[
-    #        [str],
-    #        Union[
-    #            "up.model.Type",
-    #            "up.model.Action",
-    #            "up.model.Fluent",
-    #            "up.model.Object",
-    #            "up.model.Parameter",
-    #            "up.model.Variable",
-    #        ],
-    #    ],
-    # ) -> "up.plans.Plan":
-    #    # Validate the GP plan over the input problem
-    #    dest_prog = f'tmp/gp_plan.prog'
-    #    subprocess.run(f'cp {plan_filename} {dest_prog}', shell=True)
-    #    main_bin = pkg_resources.resource_filename(__name__, "bfgp_pp/main.bin")
-    #    command = f"{main_bin} -m validation-prog -t {self._theory} -f tmp/ -p {dest_prog}".split()
-    #    subprocess.run(command)
-    #
-    #    return super()._plan_from_file(problem, "plan.1", get_item_named)
-
-    # def _result_status(self,
-    #                   problem: "up.model.Problem",
-    #                   plan: Optional["up.plans.Plan"],
-    #                   retval: int,
-    #                   log_messages: Optional[List[LogMessage]] = None) \
-    #        -> "up.engines.results.PlanGenerationResultStatus":
-    #    """ Validate the problem """
-    #    if retval != 0:
-    #        return PlanGenerationResultStatus.INTERNAL_ERROR
-    #    elif plan is None:
-    #        return PlanGenerationResultStatus.UNSOLVABLE_PROVEN
-    #    else:
-    #        return PlanGenerationResultStatus.SOLVED_SATISFICING
-
+        # Step 4. validate plans and return a list of results
+        results = []
+        for idx, problem in enumerate(problems):
+                # Building candidate plan (from root folder)
+                plan_file = f"tmp/plan.{idx+1}"
+                plan = up.plans.SequentialPlan([])
+                with open(plan_file) as pf:
+                    for line in pf:
+                        if line[0] == ';':
+                            continue
+                        # Extract action and params data
+                        grounded_act = line[1:-2].split()
+                        a = self.pddl_writers[idx].get_item_named(grounded_act[0])
+                        params = []
+                        for param in grounded_act[1:]:
+                            params.append(self.pddl_writers[idx].get_item_named(param))
+                        # Build an ActionInstance with previous data
+                        plan.actions.append(up.plans.ActionInstance(action=a, params=params))
+                if problem.environment.factory.PlanValidator(name='sequential_plan_validator').validate(problem, plan):
+                    results.append(PlanGenerationResultStatus.SOLVED_SATISFICING)
+                else:
+                    results.append(PlanGenerationResultStatus.UNSOLVABLE_PROVEN)
+        return results
 
 # Register the solver
 # env = up.environment.get_environment()

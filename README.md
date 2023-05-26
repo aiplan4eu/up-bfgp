@@ -16,7 +16,7 @@ sudo apt-get -y install cmake g++ make python3 git
 
 2. Clone the interface repository
 ```shell
-git@github.com:aiplan4eu/up-bfgp.git
+git clone git@github.com:aiplan4eu/up-bfgp.git
 ```
 
 3. Create a local virtual environment

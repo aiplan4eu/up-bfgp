@@ -13,9 +13,11 @@ class BFGPtest(unittest.TestCase):
 
     with up.environment.get_environment().factory.FewshotPlanner(name='bfgp') as bfgp:
         bfgp.set_arguments(program_lines=15)
+        # Read the 3 gripper problems in the test
         pddl_problems = [PDDLReader().parse_problem('gripper/domain.pddl', f'gripper/p0{idx}.pddl') for idx in range(1, 4)]
-        # print(pddl_problem)
+        # Compute the generalized plan for these 3 problems
         result = bfgp.solve(pddl_problems, output_stream=sys.stdout)
+        # Check whether all generated plans are satisficing
         if all(r == PlanGenerationResultStatus.SOLVED_SATISFICING for r in result):
             print(f'{bfgp.name} found a valid generalized plan!')
             # print(f'The plan is:')
