@@ -27,7 +27,7 @@ source venv/bin/activate
 ```
 4. Clone and install our version of the Unified Planning library
 ```shell
-git clone -b gp-planner git@github.com:jsego/unified-planning.git
+git clone git@github.com:jsego/unified-planning.git
 ```
 5. Install the package and its dependencies
 ```shell
