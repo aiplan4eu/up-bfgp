@@ -1,0 +1,1 @@
+python bfgp.py -d bfgp_pp/domains/gripper/domain.pddl -i bfgp_pp/domains/gripper/p01.pddl bfgp_pp/domains/gripper/p02.pddl bfgp_pp/domains/gripper/p03.pddl -m synthesis -t cpp -l 10 -f ed ilc -p gripper.prog
