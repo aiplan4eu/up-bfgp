@@ -89,7 +89,7 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
         command = self.get_base_cmd(domain_filename, problem_filenames)
         if not (self._evaluation_functions is None):
             command += f" -e " + " ".join(self._evaluation_functions)
-        command += f" -l {self._program_lines} -o {self._output_dir}/{self._program}"
+        command += f" -l {self._program_lines} -o {self._output_dir}/{self._program} -pgp True"
         print(command)
         return command.split()
 
