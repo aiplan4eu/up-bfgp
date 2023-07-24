@@ -17,6 +17,7 @@ class BFGPtest(unittest.TestCase):
             # Check whether all generated plans are satisficing
             assert all(r == PlanGenerationResultStatus.SOLVED_SATISFICING for r in result)
 
+    # @unittest.skip
     def test_bfgp_synthesis_gripper(self):
         """Testing the BFGP++ solvers can solve 3 different Gripper instances"""
         domain = 'domains/gripper/domain.pddl'
@@ -29,7 +30,7 @@ class BFGPtest(unittest.TestCase):
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
-    #@unittest.skip
+    # @unittest.skip
     def test_bfgp_visitall(self):
         """Testing the BFGP++ solver can solve 10 different Visitall instances"""
         domain = 'domains/visitall/synthesis/domain.pddl'
@@ -51,6 +52,81 @@ class BFGPtest(unittest.TestCase):
                        'output_dir': 'test_visitall/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+
+    # @unittest.skip
+    def test_bfgp_spanner(self):
+        """Testing the BFGP++ solver can solve 10 first Spanner instances"""
+        domain = 'domains/spanner/domain.pddl'
+        problems = [f'domains/spanner/training/easy/p{i:02}.pddl' for i in range(1, 11)]
+        kwargs = dict({'mode': 'synthesis',
+                       'theory': 'cpp',
+                       'program_lines': 16,
+                       'program': 'spanner.prog',
+                       'output_dir': 'test_spanner/'})
+
+        self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+
+        """Testing the BFGP++ solver can validate 10 last (and larger) Spanner instances"""
+        domain = 'domains/spanner/domain.pddl'
+        problems = [f'domains/spanner/training/easy/p{i:02}.pddl' for i in range(90, 100)]
+        kwargs = dict({'mode': 'validation-prog',
+                       'theory': 'cpp',
+                       'program': 'spanner.prog',
+                       'output_dir': 'test_spanner/'})
+
+        self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+
+    # @unittest.skip
+    def test_bfgp_miconic(self):
+        """Testing the BFGP++ solver can solve 50 first Miconic instances"""
+        domain = 'domains/miconic/domain.pddl'
+        problems = [f'domains/miconic/training/easy/p{i:02}.pddl' for i in range(1, 51)]
+        kwargs = dict({'mode': 'synthesis',
+                       'theory': 'cpp',
+                       'program_lines': 13,
+                       'program': 'miconic.prog',
+                       'num_extra_pointers': 1,
+                       'output_dir': 'test_miconic/'})
+
+        self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+
+        """Testing the BFGP++ solver can validate 10 last (and larger) Miconic instances"""
+        domain = 'domains/miconic/domain.pddl'
+        problems = [f'domains/miconic/training/easy/p{i:02}.pddl' for i in range(90, 100)]
+        kwargs = dict({'mode': 'validation-prog',
+                       'theory': 'cpp',
+                       'program': 'miconic.prog',
+                       'num_extra_pointers': 1,
+                       'output_dir': 'test_miconic/'})
+
+        self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+
+    """
+    # ToDo: update the theory to capture goals in the initial state
+    def test_bfgp_satellite(self):
+        # Testing the BFGP++ solver can solve 20 first Satellite instances
+        domain = 'domains/satellite/domain.pddl'
+        problems = [f'domains/satellite/training/easy/p{i:02}.pddl' for i in range(1, 21)]
+        kwargs = dict({'mode': 'synthesis',
+                       'theory': 'cpp',
+                       'program_lines': 15,
+                       'program': 'satellite.prog',
+                       'num_extra_pointers': 1,
+                       'output_dir': 'test_satellite/'})
+
+        self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+
+        # Testing the BFGP++ solver can validate 10 last (and larger) Spanner instances
+        domain = 'domains/satellite/domain.pddl'
+        problems = [f'domains/satellite/training/easy/p{i:02}.pddl' for i in range(90, 100)]
+        kwargs = dict({'mode': 'validation-prog',
+                       'theory': 'cpp',
+                       'program': 'satellite.prog',
+                       'num_extra_pointers': 1,
+                       'output_dir': 'test_satellite/'})
+
+        self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+    """
 
 
 if __name__ == "__main__":
