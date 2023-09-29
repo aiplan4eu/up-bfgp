@@ -1,35 +1,35 @@
 # All OK!
-python bfgp.py -d bfgp_pp/domains/gripper/synthesis/domain.pddl \
-               -i bfgp_pp/domains/gripper/synthesis/p01.pddl \
-                  bfgp_pp/domains/gripper/synthesis/p02.pddl \
-                  bfgp_pp/domains/gripper/synthesis/p03.pddl \
+python bfgp.py -d ../tests/domains/gripper/domain.pddl \
+               -i ../tests/domains/gripper/p01.pddl \
+                  ../tests/domains/gripper/p02.pddl \
+                  ../tests/domains/gripper/p03.pddl \
                -m repair \
                -t cpp \
                -l 10 \
                -f ed ilc \
                -o tmp_ok/ \
-               -p bfgp_pp/program_repair/strips/gripper/gripper_cpp_ok
+               -p ../tests/domains/gripper/program_repair/gripper_cpp_ok
                
 # Missing loops
-python bfgp.py -d bfgp_pp/domains/gripper/synthesis/domain.pddl \
-               -i bfgp_pp/domains/gripper/synthesis/p01.pddl \
-                  bfgp_pp/domains/gripper/synthesis/p02.pddl \
-                  bfgp_pp/domains/gripper/synthesis/p03.pddl \
+python bfgp.py -d ../tests/domains/gripper/domain.pddl \
+               -i ../tests/domains/gripper/p01.pddl \
+                  ../tests/domains/gripper/p02.pddl \
+                  ../tests/domains/gripper/p03.pddl \
                -m repair \
                -t cpp \
                -l 10 \
                -f ed ilc \
                -o tmp_missing_loops/ \
-               -p bfgp_pp/program_repair/strips/gripper/gripper_cpp_missing_loops
+               -p ../tests/domains/gripper/program_repair/gripper_cpp_missing_loops
 
 # Missing planning actions
-python bfgp.py -d bfgp_pp/domains/gripper/synthesis/domain.pddl \
-               -i bfgp_pp/domains/gripper/synthesis/p01.pddl \
-                  bfgp_pp/domains/gripper/synthesis/p02.pddl \
-                  bfgp_pp/domains/gripper/synthesis/p03.pddl \
+python bfgp.py -d ../tests/domains/gripper/domain.pddl \
+               -i ../tests/domains/gripper/p01.pddl \
+                  ../tests/domains/gripper/p02.pddl \
+                  ../tests/domains/gripper/p03.pddl \
                -m repair \
                -t cpp \
                -l 10 \
                -f ed ilc \
                -o tmp_missing_planning_actions/ \
-               -p bfgp_pp/program_repair/strips/gripper/gripper_cpp_missing_planning_actions
+               -p ../tests/domains/gripper/program_repair/gripper_cpp_missing_planning_actions

@@ -1,7 +1,7 @@
-python bfgp.py -d bfgp_pp/domains/gripper/synthesis/domain.pddl \
-               -i bfgp_pp/domains/gripper/synthesis/p01.pddl \
-                  bfgp_pp/domains/gripper/synthesis/p02.pddl \
-                  bfgp_pp/domains/gripper/synthesis/p03.pddl \
+python bfgp.py -d ../tests/domains/gripper/domain.pddl \
+               -i ../tests/domains/gripper/p01.pddl \
+                  ../tests/domains/gripper/p02.pddl \
+                  ../tests/domains/gripper/p03.pddl \
                -m synthesis \
                -t cpp \
                -l 10 \
