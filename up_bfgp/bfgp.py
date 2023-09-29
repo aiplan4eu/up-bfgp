@@ -214,10 +214,26 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
                 results.append(PlanGenerationResultStatus.UNSOLVABLE_PROVEN)
         return results
 
+    def generate_problems(self, domain: str, problems: List[str]) -> List["up.model.AbstractProblem"]:
+        if len(domain) > 3 and domain[-4:] == ".txt":  # It is a RAM input
+            up_gp_problem = up.model.Problem("basic")
+            up_gp_problem.__setattr__('gp_domain', domain)
+            up_gp_problem.__setattr__('gp_instances', problems)
+            problems = [up_gp_problem]
+            self._is_pddl_input = False
+        elif len(domain) > 4 and domain[-5:] == ".pddl":  # It is a PDDL input
+            reader = PDDLReader()
+            problems = [reader.parse_problem(domain, p) for p in problems]
+        else:
+            print("Unknown domain input type")
+            exit(-1)
+
+        return problems
 
 # Register the solver
 # env = up.environment.get_environment()
 # env.factory.add_engine('bfgp', __name__, 'BestFirstGeneralizedPlanner')
+
 
 
 def run_bfgp():
@@ -240,25 +256,11 @@ def run_bfgp():
 
     args = parser.parse_args()
     args_dict = vars(args)
-    domain = args.input_domain
 
     # Invoke planner
     with up.environment.get_environment().factory.FewshotPlanner(name='bfgp') as bfgp:
-        problems = []
-        if len(domain) > 3 and domain[-4:] == ".txt":  # It is a RAM input
-            up_gp_problem = up.model.Problem("basic")
-            up_gp_problem.__setattr__('gp_domain', domain)
-            up_gp_problem.__setattr__('gp_instances', args.input_problems)
-            problems = [up_gp_problem]
-            args_dict['is_pddl_input'] = False
-        elif len(domain) > 4 and domain[-5:] == ".pddl":  # It is a PDDL input
-            reader = PDDLReader()
-            problems = [reader.parse_problem(domain, p) for p in args.input_problems]
-        else:
-            print("Unknown domain input type")
-            exit(-1)
-
         bfgp.set_arguments(**args_dict)
+        problems = bfgp.generate_problems(args.input_domain, args.input_problems)
         result = bfgp.solve(problems, output_stream=sys.stdout)
 
         if all(r == PlanGenerationResultStatus.SOLVED_SATISFICING for r in result):
