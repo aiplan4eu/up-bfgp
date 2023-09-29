@@ -31,8 +31,8 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
             "website": "https://github.com/jsego/bfgp-pp",
             "license": "GPLv3",
             "short_description": "Best-First Generalized Planner",
-            "long_description": "A framework based on Best-First Generalized Planning that synthesizes and validates "
-                                "assembly-like and structured programs.",
+            "long_description": "A framework based on Best-First Generalized Planning that synthesizes, validates and "
+                                "repairs, assembly-like and structured programs.",
         }
         self.set_arguments(**options)
 
@@ -46,7 +46,7 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
         """ Optional args """
         self._evaluation_functions : List[str] = options.get('evaluation_functions', None)  # only in synthesis
         self._num_extra_pointers : int = options.get('num_extra_pointers', 0)
-        self._output_dir : str = options.get('output_dir', 'tmp/')
+        self._translated_problem_dir : str = options.get('translated_problem_dir', 'tmp/')
 
     @property
     def name(self) -> str:
@@ -69,35 +69,38 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
         return problem_kind <= BestFirstGeneralizedPlanner.supported_kind()
 
     def preprocess(self, domain_filename: str, problem_filenames: List[str]) -> None:
-        #shutil.rmtree(self._output_dir, ignore_errors=True)
-        os.makedirs(self._output_dir, exist_ok=True)
-        subprocess.run(f"rm -rf {self._output_dir}/*.txt", shell=True)  # delete all .txt files (domain and instances)
+        os.makedirs(self._translated_problem_dir, exist_ok=True)
+        # delete all .txt files (domain and instances)
+        subprocess.run(f"rm -rf {self._translated_problem_dir}/*.txt", shell=True)
         translator = pkg_resources.resource_filename(__name__, "bfgp_pp/preprocess/pddl_translator.py")
         assert problem_filenames
         for idx, problem_filename in enumerate(problem_filenames):
-            cmd = f"python {translator} -d {domain_filename} -i {problem_filename} -o {self._output_dir} -id {idx + 1}"
+            cmd = (f"python {translator} -d {domain_filename} -i {problem_filename} -o {self._translated_problem_dir} "
+                   f"-id {idx + 1}")
             subprocess.run(cmd.split())
 
     def get_base_cmd(self,  domain_filename: str, problem_filenames: List[str]) -> str:
         self.preprocess(domain_filename=domain_filename, problem_filenames=problem_filenames)
         # print(compiled_folder)
         main_bin = pkg_resources.resource_filename(__name__, "bfgp_pp/main.bin")
-        return f"{main_bin} -m {self._mode} -t {self._theory} -f {self._output_dir} -s {self._num_extra_pointers}"
+        return f"{main_bin} -m {self._mode} -t {self._theory} -f {self._translated_problem_dir} -s {self._num_extra_pointers}"
 
     def get_synth_cmd(self, domain_filename: str, problem_filenames: List[str]) -> List[str]:
         """ Command to execute the generalized planner to synthesize a program """
         command = self.get_base_cmd(domain_filename, problem_filenames)
         if not (self._evaluation_functions is None):
             command += f" -e " + " ".join(self._evaluation_functions)
-        command += f" -l {self._program_lines} -o {self._output_dir}/{self._program} -pgp True"
+        command += f" -l {self._program_lines} -o {self._translated_problem_dir}/{self._program} -pgp True"
         print(command)
         return command.split()
 
     def get_val_cmd(self, domain_filename: str, problem_filenames: List[str]) -> List[str]:
         """ Command to execute the validation of a program over a set of instances """
         command = self.get_base_cmd(domain_filename, problem_filenames)
-        command += f" -p {self._output_dir}/{self._program}"
-        # print(command)
+        command += (f" -p {self._translated_problem_dir}/{self._program}.prog "
+                    f" -o {self._translated_problem_dir} "
+                    f" -plans True")
+        print(command)
         return command.split()
 
     def _solve(self,
@@ -116,7 +119,7 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
             domain_filename = os.path.join(tempdir, "domain.pddl")
             problem_filenames = [f"{tempdir}/{idx}.pddl" for idx in range(1, 1 + len(problems))]
             if self._program is None:
-                self._program = "dk.prog"  # os.path.join(tempdir, "dk.prog")
+                self._program = "dk"  # os.path.join(tempdir, "dk.prog")
             self.pddl_writers = []
             for idx, problem_filename in enumerate(problem_filenames):
                 self.pddl_writers.append(PDDLWriter(problems[idx]))
@@ -127,10 +130,12 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
             if self._mode == "synthesis":
                 cmd = self.get_synth_cmd(domain_filename, problem_filenames)
                 subprocess.run(cmd)  # ToDo: capture execution errors in results? e.g. INTERNAL_ERROR
-            # ToDo: implement here the call to 3rd Deliverable mode
+            elif self._mode == "repair":
+                cmd = self.get_repair_cmd(domain_filename, problem_filenames)
+                subprocess.run(cmd)
 
             # Step 3. generate plans
-            if self._mode == "synthesis":
+            if self._mode in ["synthesis", "repair"]:
                 self._mode = "validation-prog"  # change to validation-prog to validate the generalized plan
             else:
                 assert not (self._program is None)
@@ -138,7 +143,7 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
 
             cmd = self.get_val_cmd(domain_filename, problem_filenames)
             subprocess.run(cmd)  # ToDo: capture execution errors in results? e.g. INTERNAL_ERROR
-            subprocess.run(f'mv plan.* {self._output_dir}', shell=True)
+            # subprocess.run(f'mv plan.* {self._translated_problem_dir}', shell=True)
 
         # Step 4. validate plans and return a list of results
         return self.get_results(problems)
@@ -147,7 +152,7 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
         results = []
         for idx, problem in enumerate(problems):
             # Building candidate plan (from root folder)
-            plan_file = f"{self._output_dir}/plan.{idx+1}"
+            plan_file = f"{self._translated_problem_dir}/plan.{idx+1}"
             plan = up.plans.SequentialPlan([])
             with open(plan_file) as pf:
                 for line in pf:
@@ -188,7 +193,7 @@ def run_bfgp():
     parser.add_argument("-p", "--program", type=str, required=False)
     parser.add_argument("-f", "--evaluation_functions", nargs="*", default=None, required=False)
     parser.add_argument("-s", "--num_extra_pointers", type=int, required=False, default=0)
-    parser.add_argument("-o", "--output_dir", type=str, required=False, default="tmp/")
+    parser.add_argument("-o", "--translated_problem_dir", type=str, required=False, default="tmp/")
 
     args = parser.parse_args()
     args_dict = vars(args)
