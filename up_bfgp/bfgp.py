@@ -103,6 +103,18 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
         print(command)
         return command.split()
 
+    def get_repair_cmd(self, domain_filename: str, problem_filenames: List[str]) -> List[str]:
+        """ Command to execute the repair of a program over a set of instances """
+        command = self.get_base_cmd(domain_filename, problem_filenames)
+        if not (self._evaluation_functions is None):
+            command += f" -e " + " ".join(self._evaluation_functions)
+        command += (f" -l {self._program_lines} "
+                    f" -p {self._program}.prog "
+                    f" -o {self._translated_problem_dir} "
+                    f" -pgp True")
+        print(command)
+        return command.split()
+
     def _solve(self,
                problems: List["up.model.AbstractProblem"],
                heuristic: Optional[Callable[["up.model.state.State"], Optional[float]]] = None,
@@ -133,6 +145,8 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
             elif self._mode == "repair":
                 cmd = self.get_repair_cmd(domain_filename, problem_filenames)
                 subprocess.run(cmd)
+                # Prepare the output program for validation
+                self._program = self._program.split('/')[-1]
 
             # Step 3. generate plans
             if self._mode in ["synthesis", "repair"]:
@@ -179,8 +193,8 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
 
 def run_bfgp():
     # Get arguments
-    mode_choices = ["synthesis", "validation-prog", "validation-cpp"]
-    theory_choices = ["assembler", "cpp"]
+    mode_choices = ["synthesis", "validation-prog", "validation-cpp", "repair"]
+    theory_choices = ["assembler", "cpp", "actions_strips", "actions_cell", "actions_adl", "actions_ram"]
 
     parser = argparse.ArgumentParser(description="BFGP++ Runner",
                                      formatter_class=argparse.RawTextHelpFormatter)
@@ -202,25 +216,13 @@ def run_bfgp():
 
     # Invoke planner
     with up.environment.get_environment().factory.FewshotPlanner(name='bfgp') as bfgp:
-        # OLD
-        # bfgp.set_arguments(program_lines=15)
-        # reader = PDDLReader()
-        # pddl_problem = reader.parse_problem('bfgp_pp/domains/gripper/domain.pddl', 'bfgp_pp/domains/gripper/p01.pddl')
-        # print(pddl_problem)
-        # result = bfgp.solve([pddl_problem], output_stream=sys.stdout)
-        # END OLD
-
-        # NEW
         bfgp.set_arguments(**args_dict)
         reader = PDDLReader()
         pddl_problems = [reader.parse_problem(domain, p) for p in problems]
         result = bfgp.solve(pddl_problems, output_stream=sys.stdout)
-        # END NEW
 
         if all(r == PlanGenerationResultStatus.SOLVED_SATISFICING for r in result):
             print(f'{bfgp.name} found a valid generalized plan!')
-            # print(f'The plan is:')
-            # print('\n'.join(str(x) for x in result.plan.actions))
         else:
             print('No generalized plan found!')
 
