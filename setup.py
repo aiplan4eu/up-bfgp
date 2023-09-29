@@ -12,7 +12,7 @@ import shutil
 BFGP_dst = "./up_bfgp/bfgp_pp"
 BFGP_PUBLIC = "bfgp-pp"
 COMPILE_CMD = './scripts/compile.sh'
-BFGP_TAG = "main"
+BFGP_TAG = "v0.1.0"
 BFGP_REPO = "https://github.com/jsego/bfgp-pp"
 PKG_NAME = "up_bfgp"
 
@@ -44,7 +44,7 @@ class InstallBFGPdevelop(develop):
 
 setup(
     name=PKG_NAME,
-    version='0.0.1',
+    version='0.1.0',
     description=PKG_NAME,
     author="Javier Segovia-Aguas, Sergio Jiménez and Anders Jonsson",
     author_email="javier.segovia@upf.edu",
