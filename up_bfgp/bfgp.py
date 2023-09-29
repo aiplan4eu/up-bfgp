@@ -38,15 +38,18 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
 
     def set_arguments(self, **options):
         """ Mandatory args """
-        self._mode : str = options.get('mode', 'synthesis')
-        self._theory : str = options.get('theory', 'cpp')
-        self._program_lines : int = options.get('program_lines', 10)  # only in synthesis
-        self._program : str = options.get('program', None)  # only in validation (optional for synthesis as output)
+        self._mode: str = options.get('mode', 'synthesis')
+        self._theory: str = options.get('theory', 'cpp')
+        self._program_lines: int = options.get('program_lines', 10)  # only in synthesis
+        self._program: str = options.get('program', None)  # only in validation (optional for synthesis as output)
 
         """ Optional args """
-        self._evaluation_functions : List[str] = options.get('evaluation_functions', None)  # only in synthesis
-        self._num_extra_pointers : int = options.get('num_extra_pointers', 0)
-        self._translated_problem_dir : str = options.get('translated_problem_dir', 'tmp/')
+        self._evaluation_functions: List[str] = options.get('evaluation_functions', None)  # only in synthesis
+        self._num_extra_pointers: int = options.get('num_extra_pointers', 0)
+        self._translated_problem_dir: str = options.get('translated_problem_dir', 'tmp/')
+
+        """ Protected """
+        self._is_pddl_input: bool = options.get('is_pddl_input', True)
 
     @property
     def name(self) -> str:
@@ -68,18 +71,21 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
     def supports(problem_kind) -> bool:
         return problem_kind <= BestFirstGeneralizedPlanner.supported_kind()
 
-    def preprocess(self, domain_filename: str, problem_filenames: List[str]) -> None:
+    def preprocess_target_folder(self) -> None:
         os.makedirs(self._translated_problem_dir, exist_ok=True)
         # delete all .txt files (domain and instances)
         subprocess.run(f"rm -rf {self._translated_problem_dir}/*.txt", shell=True)
-        translator = pkg_resources.resource_filename(__name__, "bfgp_pp/preprocess/pddl_translator.py")
-        assert problem_filenames
-        for idx, problem_filename in enumerate(problem_filenames):
-            cmd = (f"python {translator} -d {domain_filename} -i {problem_filename} -o {self._translated_problem_dir} "
-                   f"-id {idx + 1}")
-            subprocess.run(cmd.split())
 
-    def get_base_cmd(self,  domain_filename: str, problem_filenames: List[str]) -> str:
+    def preprocess(self, domain_filename: str, problem_filenames: List[str]) -> None:
+        if self._is_pddl_input:
+            translator = pkg_resources.resource_filename(__name__, "bfgp_pp/preprocess/pddl_translator.py")
+            assert problem_filenames
+            for idx, problem_filename in enumerate(problem_filenames):
+                cmd = (f"python {translator} -d {domain_filename} -i {problem_filename} -o {self._translated_problem_dir} "
+                       f"-id {idx + 1}")
+                subprocess.run(cmd.split())
+
+    def get_base_cmd(self, domain_filename: str, problem_filenames: List[str]) -> str:
         self.preprocess(domain_filename=domain_filename, problem_filenames=problem_filenames)
         # print(compiled_folder)
         main_bin = pkg_resources.resource_filename(__name__, "bfgp_pp/main.bin")
@@ -123,20 +129,31 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
 
         # Step 0. Assert that problems exist, and they are instances of up.model.Problem
         assert problems
-        assert all((isinstance(p, up.model.Problem) for p in problems))
 
         # Step 1. preprocess all problems and get command (some code reused from PDDL planner)
         # logs: List["up.engines.results.LogMessage"] = []
+        self.preprocess_target_folder()
         with tempfile.TemporaryDirectory() as tempdir:
-            domain_filename = os.path.join(tempdir, "domain.pddl")
-            problem_filenames = [f"{tempdir}/{idx}.pddl" for idx in range(1, 1 + len(problems))]
             if self._program is None:
                 self._program = "dk"  # os.path.join(tempdir, "dk.prog")
-            self.pddl_writers = []
-            for idx, problem_filename in enumerate(problem_filenames):
-                self.pddl_writers.append(PDDLWriter(problems[idx]))
-                self.pddl_writers[-1].write_domain(domain_filename)
-                self.pddl_writers[-1].write_problem(problem_filename)
+            if self._is_pddl_input:
+                assert all((isinstance(p, up.model.Problem) for p in problems))
+                domain_filename = os.path.join(tempdir, "domain.pddl")
+                problem_filenames = [f"{tempdir}/{idx}.pddl" for idx in range(1, 1 + len(problems))]
+                self.pddl_writers = []
+                for idx, problem_filename in enumerate(problem_filenames):
+                    self.pddl_writers.append(PDDLWriter(problems[idx]))
+                    self.pddl_writers[-1].write_domain(domain_filename)
+                    self.pddl_writers[-1].write_problem(problem_filename)
+            else:
+                # Copy the domain
+                domain_filename = problems[0].__getattribute__('gp_domain')
+                problem_filenames = problems[0].__getattribute__('gp_instances')
+                subprocess.run(f"cp {domain_filename} {self._translated_problem_dir}", shell=True)
+                # Copy the instances (rename them from 1 to n)
+                for idx, problem in enumerate(problem_filenames):
+                    subprocess.run(f"cp {problem} {self._translated_problem_dir}/{idx+1}.txt", shell=True)
+
 
             # Step 2. search a GP plan if called in synthesis mode
             if self._mode == "synthesis":
@@ -148,6 +165,10 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
                 # Prepare the output program for validation
                 self._program = self._program.split('/')[-1]
 
+            # If the program does not exist, then there is nothing to validate
+            if not os.path.isfile(f"{self._translated_problem_dir}/{self._program}.prog"):
+                return [PlanGenerationResultStatus.UNSOLVABLE_PROVEN]
+
             # Step 3. generate plans
             if self._mode in ["synthesis", "repair"]:
                 self._mode = "validation-prog"  # change to validation-prog to validate the generalized plan
@@ -157,16 +178,23 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
 
             cmd = self.get_val_cmd(domain_filename, problem_filenames)
             subprocess.run(cmd)  # ToDo: capture execution errors in results? e.g. INTERNAL_ERROR
-            # subprocess.run(f'mv plan.* {self._translated_problem_dir}', shell=True)
 
         # Step 4. validate plans and return a list of results
-        return self.get_results(problems)
+        if self._is_pddl_input:
+            return self.get_results(problems)
+        # Otherwise, if the input is a RAM problem
+        with open(f"{self._translated_problem_dir}/.out", "r") as validation_results:
+            for line in validation_results.readlines():
+                if 'GOAL ACHIEVED' in line:
+                    return [PlanGenerationResultStatus.SOLVED_SATISFICING]
+        return [PlanGenerationResultStatus.UNSOLVABLE_PROVEN]
 
-    def get_results(self,problems: List["up.model.AbstractProblem"]) -> List["up.engines.results.PlanGenerationResult"]:
+    def get_results(self, problems: List["up.model.AbstractProblem"]) -> List[
+        "up.engines.results.PlanGenerationResult"]:
         results = []
         for idx, problem in enumerate(problems):
             # Building candidate plan (from root folder)
-            plan_file = f"{self._translated_problem_dir}/plan.{idx+1}"
+            plan_file = f"{self._translated_problem_dir}/plan.{idx + 1}"
             plan = up.plans.SequentialPlan([])
             with open(plan_file) as pf:
                 for line in pf:
@@ -185,6 +213,7 @@ class BestFirstGeneralizedPlanner(engines.Engine, engines.mixins.FewshotPlannerM
             else:
                 results.append(PlanGenerationResultStatus.UNSOLVABLE_PROVEN)
         return results
+
 
 # Register the solver
 # env = up.environment.get_environment()
@@ -212,14 +241,25 @@ def run_bfgp():
     args = parser.parse_args()
     args_dict = vars(args)
     domain = args.input_domain
-    problems = args.input_problems
 
     # Invoke planner
     with up.environment.get_environment().factory.FewshotPlanner(name='bfgp') as bfgp:
+        problems = []
+        if len(domain) > 3 and domain[-4:] == ".txt":  # It is a RAM input
+            up_gp_problem = up.model.Problem("basic")
+            up_gp_problem.__setattr__('gp_domain', domain)
+            up_gp_problem.__setattr__('gp_instances', args.input_problems)
+            problems = [up_gp_problem]
+            args_dict['is_pddl_input'] = False
+        elif len(domain) > 4 and domain[-5:] == ".pddl":  # It is a PDDL input
+            reader = PDDLReader()
+            problems = [reader.parse_problem(domain, p) for p in args.input_problems]
+        else:
+            print("Unknown domain input type")
+            exit(-1)
+
         bfgp.set_arguments(**args_dict)
-        reader = PDDLReader()
-        pddl_problems = [reader.parse_problem(domain, p) for p in problems]
-        result = bfgp.solve(pddl_problems, output_stream=sys.stdout)
+        result = bfgp.solve(problems, output_stream=sys.stdout)
 
         if all(r == PlanGenerationResultStatus.SOLVED_SATISFICING for r in result):
             print(f'{bfgp.name} found a valid generalized plan!')
