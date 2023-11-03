@@ -50,7 +50,6 @@ setup(
     description="Unified Planning integration of the BFGP++ generalized planner",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    description=PKG_NAME,
     author="Javier Segovia-Aguas, Sergio Jiménez and Anders Jonsson",
     author_email="javier.segovia@upf.edu",
     packages=[PKG_NAME],
