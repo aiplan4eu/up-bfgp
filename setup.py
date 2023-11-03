@@ -41,10 +41,15 @@ class InstallBFGPdevelop(develop):
         install_BFGP()
         develop.run(self)
 
+long_description = "This package makes the [BFGP++](https://github.com/jsego/bfgp-pp) generalized planner available in the [unified_planning library](https://github.com/aiplan4eu/unified-planning) by the [AIPlan4EU project](https://www.aiplan4eu-project.eu/)."
+
 
 setup(
     name=PKG_NAME,
     version='0.1.0',
+    description="Unified Planning integration of the BFGP++ generalized planner",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     description=PKG_NAME,
     author="Javier Segovia-Aguas, Sergio Jiménez and Anders Jonsson",
     author_email="javier.segovia@upf.edu",
