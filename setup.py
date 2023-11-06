@@ -12,7 +12,7 @@ import shutil
 BFGP_dst = "./up_bfgp/bfgp_pp"
 BFGP_PUBLIC = "bfgp-pp"
 COMPILE_CMD = './scripts/compile.sh'
-BFGP_TAG = "v0.1.0"
+BFGP_TAG = "v0.1.1"
 BFGP_REPO = "https://github.com/jsego/bfgp-pp"
 PKG_NAME = "up_bfgp"
 
@@ -46,7 +46,7 @@ long_description = "This package makes the [BFGP++](https://github.com/jsego/bfg
 
 setup(
     name=PKG_NAME,
-    version='0.1.0',
+    version='0.1.1',
     description="Unified Planning integration of the BFGP++ generalized planner",
     long_description=long_description,
     long_description_content_type="text/markdown",
