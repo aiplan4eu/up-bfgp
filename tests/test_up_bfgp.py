@@ -26,7 +26,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 10,
                        'program': 'gripper',
-                       'translated_problem_dir': 'tmp_gripper/'})
+                       'translated_problem_dir': 'tmp/gripper/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -40,7 +40,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 10,
                        'program': 'domains/gripper/program_repair/gripper_cpp_ok',
-                       'translated_problem_dir': 'tmp_gripper_ok/'})
+                       'translated_problem_dir': 'tmp/gripper_ok/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -49,7 +49,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 10,
                        'program': 'domains/gripper/program_repair/gripper_cpp_missing_loops',
-                       'translated_problem_dir': 'tmp_gripper_missing_loops/'})
+                       'translated_problem_dir': 'tmp/gripper_missing_loops/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -58,7 +58,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 10,
                        'program': 'domains/gripper/program_repair/gripper_cpp_missing_planning_actions',
-                       'translated_problem_dir': 'tmp_gripper_missing_planning_actions/'})
+                       'translated_problem_dir': 'tmp/gripper_missing_planning_actions/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -72,7 +72,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 16,
                        'program': 'visitall',
-                       'translated_problem_dir': 'tmp_visitall/'})
+                       'translated_problem_dir': 'tmp/visitall/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -82,7 +82,7 @@ class BFGPtest(unittest.TestCase):
         kwargs = dict({'mode': 'validation-prog',
                        'theory': 'cpp',
                        'program': 'visitall',
-                       'translated_problem_dir': 'tmp_visitall/'})
+                       'translated_problem_dir': 'tmp/visitall/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -95,7 +95,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 16,
                        'program': 'spanner',
-                       'translated_problem_dir': 'tmp_spanner/'})
+                       'translated_problem_dir': 'tmp/spanner/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -105,7 +105,7 @@ class BFGPtest(unittest.TestCase):
         kwargs = dict({'mode': 'validation-prog',
                        'theory': 'cpp',
                        'program': 'spanner',
-                       'translated_problem_dir': 'tmp_spanner/'})
+                       'translated_problem_dir': 'tmp/spanner/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -119,7 +119,7 @@ class BFGPtest(unittest.TestCase):
                        'program_lines': 13,
                        'program': 'miconic',
                        'num_extra_pointers': 1,
-                       'translated_problem_dir': 'tmp_miconic/'})
+                       'translated_problem_dir': 'tmp/miconic/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -130,7 +130,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program': 'miconic',
                        'num_extra_pointers': 1,
-                       'translated_problem_dir': 'tmp_miconic/'})
+                       'translated_problem_dir': 'tmp/miconic/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -143,7 +143,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 7,
                        'program': 'fibonacci',
-                       'translated_problem_dir': 'tmp_fibonacci/'})
+                       'translated_problem_dir': 'tmp/fibonacci/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -154,7 +154,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 4,
                        'program': 'find',
-                       'translated_problem_dir': 'tmp_find/'})
+                       'translated_problem_dir': 'tmp/find/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -165,7 +165,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 7,
                        'program': 'reverse',
-                       'translated_problem_dir': 'tmp_reverse/'})
+                       'translated_problem_dir': 'tmp/reverse/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -177,7 +177,7 @@ class BFGPtest(unittest.TestCase):
                        'program_lines': 7,
                        'num_extra_pointers': 1,
                        'program': 'select',
-                       'translated_problem_dir': 'tmp_select/'})
+                       'translated_problem_dir': 'tmp/select/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -188,7 +188,7 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 8,
                        'program': 'sorting',
-                       'translated_problem_dir': 'tmp_sorting/'})
+                       'translated_problem_dir': 'tmp/sorting/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
@@ -199,7 +199,58 @@ class BFGPtest(unittest.TestCase):
                        'theory': 'cpp',
                        'program_lines': 5,
                        'program': 'triangular_sum',
-                       'translated_problem_dir': 'tmp_triangular_sum/'})
+                       'translated_problem_dir': 'tmp/triangular_sum/'})
+
+        self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+
+    def test_action_models_benchmarks(self):
+        """Testing the BFGP++ solver over 4 different target languages for learning action models"""
+        # Benchmark 1: target language=STRIPS; domain=Gripper; action=pick
+        domain = 'domains/action_models/gripper/pick/domain.txt'
+        problems = [f'domains/action_models/gripper/pick/{i}.txt' for i in range(1, 21)]
+        kwargs = dict({'mode': 'synthesis',
+                       'theory': 'actions_strips',
+                       'program': 'gripper_pick',
+                       'evaluation_functions': ["ilc", "mi", "cwed"],
+                       'translated_problem_dir': 'tmp/gripper_pick/'})
+
+        self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+
+        # Benchmark 2: target language=ADL; domain=Elevators; action=stop
+        domain = 'domains/action_models/elevators/stop/domain.txt'
+        problems = [f'domains/action_models/elevators/stop/{i}.txt' for i in range(1, 21)]
+        kwargs = dict({'mode': 'synthesis',
+                       'theory': 'actions_adl',
+                       'program_lines': 18,
+                       'program': 'elevators_stop',
+                       'evaluation_functions': ["ilc", "mi", "cwed"],
+                       'translated_problem_dir': 'tmp/elevators_stop/'})
+
+        self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+
+        # Benchmark 3: target language=1D Cellular; domain=Cellular; action=rule90
+        domain = 'domains/action_models/rule90/domain.txt'
+        problems = [f'domains/action_models/rule90/{i}.txt' for i in range(1, 21)]
+        kwargs = dict({'mode': 'synthesis',
+                       'theory': 'actions_cell',
+                       'program_lines': 95,
+                       'num_extra_pointers': 2,
+                       'program': 'cell_rule90',
+                       'evaluation_functions': ["ilc", "mi", "cwed"],
+                       'translated_problem_dir': 'tmp/cell_rule90/'})
+
+        self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
+
+        # Benchmark 4: target language=RAM; domain=Pancakes; action=flip
+        domain = 'domains/action_models/pancakes/domain.txt'
+        problems = [f'domains/action_models/pancakes/{i}.txt' for i in range(1, 17)]
+        kwargs = dict({'mode': 'synthesis',
+                       'theory': 'actions_ram',
+                       'program_lines': 8,
+                       'num_extra_pointers': 1,
+                       'program': 'pancakes_flip',
+                       'evaluation_functions': ["ilc", "mi", "cwed"],
+                       'translated_problem_dir': 'tmp/pancakes_flip/'})
 
         self.base_bfgp_test(domain_file=domain, problem_files=problems, args=kwargs)
 
