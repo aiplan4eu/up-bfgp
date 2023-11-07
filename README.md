@@ -32,6 +32,7 @@ git clone git@github.com:jsego/unified-planning.git
 5. Install the package and its dependencies
 ```shell
 pip install unified-planning/
+wget -N https://raw.githubusercontent.com/jsego/bfgp-pp/main/requirements.txt
 pip install -r requirements.txt
 pip install -e .
 ```
