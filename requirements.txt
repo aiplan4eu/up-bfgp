@@ -25,7 +25,6 @@ comm==0.1.4
 configobj==5.0.6
 ConfigSpace==0.7.1
 cryptography==3.4.8
-cupshelpers==1.0
 cycler==0.11.0
 dbus-python==1.2.18
 debugpy==1.8.0
