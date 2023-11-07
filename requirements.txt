@@ -22,7 +22,6 @@ click==8.0.3
 clingo==5.6.2
 colorama==0.4.4
 comm==0.1.4
-command-not-found==0.3
 configobj==5.0.6
 ConfigSpace==0.7.1
 cryptography==3.4.8
